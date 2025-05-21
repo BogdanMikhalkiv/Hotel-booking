@@ -24,14 +24,20 @@ public class BookingController {
         return bookingService.getBookingList();
     }
 
-//    @GetMapping("my")
-//    public ResponseEntity<?> getBookingsMy() {
-//        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO());
-//        if (bookingListMy == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
-//        }
-//        return ResponseEntity.ok(bookingListMy);
-//    }
+    @GetMapping("my")
+    public ResponseEntity<?> getBookingsMy() {
+        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO(
+                booking.getId(),
+                booking.getDateFrom(),
+                booking.getDateTo(),
+                booking.getRoom().getId(),
+                booking.getUserN().getId()
+        )).toList();
+        if (bookingListMy.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
+        }
+        return ResponseEntity.ok(bookingListMy);
+    }
 
     @PostMapping("add_booking")
     public ResponseEntity<String> saveBooking(@RequestBody Booking booking) {
