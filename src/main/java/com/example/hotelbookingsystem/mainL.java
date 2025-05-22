@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -150,6 +151,10 @@ public class mainL {
         int[] nums = {2,0};
         System.out.println(canJump(nums));
 
+
+        String s  = "2025-06-20";
+        LocalDate date = LocalDate.parse(s);
+        System.out.println(date);
 
 
 
