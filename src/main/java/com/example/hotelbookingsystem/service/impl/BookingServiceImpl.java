@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -48,9 +49,9 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
     public Booking saveBooking(Booking booking) {
-        Room room = roomRepository.findAllById(booking
-                                    .getRoom().getId())
-                                    .orElseThrow(() -> new RuntimeException("Не найдена"));
+//        Room room = roomRepository.findAllById(booking
+//                                    .getRoom().getId())
+//                                    .orElseThrow(() -> new RuntimeException("Не найдена"));
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
@@ -83,7 +84,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void deleteBooking(Long id) {
-        bookingRepository.deleteById(id);
+    public String deleteBooking(Long id) {
+        Booking bookingToDelete = bookingRepository.findAllById(id);
+        if (!LocalDate.now().isBefore( bookingToDelete.getDateFrom())) {
+            return "You can't anymore cancel your booking";
+        } else {
+            bookingRepository.deleteById(id);
+            return "Booking  was canceled  with id = " + id;
+        }
+
     }
 }

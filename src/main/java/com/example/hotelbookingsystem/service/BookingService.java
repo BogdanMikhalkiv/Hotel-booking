@@ -11,6 +11,6 @@ public interface BookingService {
     Booking saveBooking(Booking booking);
     Booking findByIdBooking (Long id);
     Booking updateBooking(Booking booking);
-    void deleteBooking(Long id);
+    String deleteBooking(Long id);
 
 }

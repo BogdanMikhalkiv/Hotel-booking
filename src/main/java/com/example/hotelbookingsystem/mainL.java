@@ -152,10 +152,9 @@ public class mainL {
         System.out.println(canJump(nums));
 
 
-        String s  = "2025-06-20";
+        String s  = "2025-05-23";
         LocalDate date = LocalDate.parse(s);
-        System.out.println(date);
-
+        System.out.println(LocalDate.now().isBefore( date));
 
 
 
