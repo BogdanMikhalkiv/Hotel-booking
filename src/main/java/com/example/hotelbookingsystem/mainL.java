@@ -1,5 +1,7 @@
 package com.example.hotelbookingsystem;
 
+import org.springframework.cglib.core.Local;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -152,9 +154,14 @@ public class mainL {
         System.out.println(canJump(nums));
 
 
-        String s  = "2025-05-23";
-        LocalDate date = LocalDate.parse(s);
-        System.out.println(LocalDate.now().isBefore( date));
+        String s  = "2025-05-20";
+        LocalDate dateFrom = LocalDate.parse(s);
+        LocalDate dateTo = LocalDate.of(2025,5,26);
+        LocalDate localDateFrom = LocalDate.of(2025,5,22);
+        LocalDate localDateTo = LocalDate.of(2025,5,26);
+
+
+        System.out.println(localDateFrom.isAfter(dateFrom.minusDays(1)) && localDateTo.isBefore(dateTo.plusDays(1)));
 
 
 

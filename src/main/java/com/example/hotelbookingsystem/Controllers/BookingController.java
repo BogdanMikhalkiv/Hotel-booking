@@ -31,6 +31,7 @@ public class BookingController {
 
     @GetMapping("my")
     public ResponseEntity<?> getBookingsMy() {
+        System.out.println("getBookingsMy");
         List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO(
                 booking.getId(),
                 booking.getDateFrom(),
@@ -38,6 +39,28 @@ public class BookingController {
                 booking.getRoom().getId(),
                 booking.getUserN().getId()
         )).toList();
+        if (bookingListMy.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
+        }
+        return ResponseEntity.ok(bookingListMy);
+    }
+    @GetMapping("my/from={dateFrom}&to={dateTo}")
+    public ResponseEntity<?> getBookingsMyRangeDate(@PathVariable LocalDate dateFrom, @PathVariable LocalDate dateTo) {
+        System.out.println("getBookingsMyRangeDate");
+        System.out.println(dateFrom + "-------- " + dateTo);
+        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy()
+                                            .stream()
+                                            .filter(b -> b.getDateFrom().isAfter(dateFrom.minusDays(1))
+                                                    &&  b.getDateTo().isBefore(dateTo.plusDays(1))
+                                            )
+                                            .map(booking -> new BookingDTO(
+                        booking.getId(),
+                        booking.getDateFrom(),
+                        booking.getDateTo(),
+                        booking.getRoom().getId(),
+                        booking.getUserN().getId()
+        )).toList();
+        System.out.println(bookingListMy);
         if (bookingListMy.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
         }
