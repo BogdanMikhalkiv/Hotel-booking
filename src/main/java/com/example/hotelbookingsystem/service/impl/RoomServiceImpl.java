@@ -38,6 +38,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Cacheable(value = "room", key = "#id")
+    public Optional<Room> findRoomWithHotel(Long id) {
+        return roomRepository.findRoomWithHotel(id);
+    }
+
+    @Override
     @CachePut(value = "room", key = "#result.id")
     public Room updateRoom(Room room) {
         return roomRepository.save(room);

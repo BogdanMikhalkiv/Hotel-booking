@@ -3,12 +3,19 @@ package com.example.hotelbookingsystem.Controllers;
 
 import com.example.hotelbookingsystem.Models.Booking;
 import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
+import com.example.hotelbookingsystem.Models.Room;
+import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.service.BookingService;
+import com.example.hotelbookingsystem.service.HotelService;
 import com.example.hotelbookingsystem.service.RoomService;
 import com.example.hotelbookingsystem.service.UserNService;
+import com.example.hotelbookingsystem.service.emailService.EmailService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,6 +30,9 @@ public class BookingController {
     private final BookingService bookingService;
     private  final UserNService userNService;
     private final RoomService roomService;
+    private final EmailService emailService;
+    private final HotelService hotelService;
+
 
     @GetMapping
     public List<Booking> getBookings() {
@@ -31,6 +41,7 @@ public class BookingController {
 
     @GetMapping("my")
     public ResponseEntity<?> getBookingsMy() {
+
         System.out.println("getBookingsMy");
         List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO(
                 booking.getId(),
@@ -92,11 +103,31 @@ public class BookingController {
 
         @PostMapping("add_booking")
     public ResponseEntity<String> saveBooking(@RequestBody Booking booking) {
-        Booking saveBooking   = bookingService.saveBooking(booking);
-        if (saveBooking == null) {
+        Boolean saveBooking   = bookingService.saveBooking(booking);
+
+        if (saveBooking == false) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dates are busy");
         }
+
         return ResponseEntity.ok("Booking was added");
+    }
+
+    @GetMapping("hello")
+    public void helloW(@RequestBody Booking booking) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!(auth instanceof AnonymousAuthenticationToken)) {
+            UserN userN = (UserN) auth.getPrincipal();
+            emailService.sendSimpleEmail(
+                    userN.getEmail(),
+                    "Confirming booking at hotel Lox ",
+                    "Thank you"
+            );
+        }
+
+
+        Room room = roomService.findRoomWithHotel(booking.getRoom().getId()).orElse(null);
+        System.out.println("hotel name ---------------" + room.getHotel().getName());
+
     }
 
 

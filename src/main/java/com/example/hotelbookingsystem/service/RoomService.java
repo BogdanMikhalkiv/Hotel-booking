@@ -9,6 +9,7 @@ public interface RoomService {
     List<Room> getRoomList();
     Room saveRoom(Room room);
     Optional<Room> findByIdRoom (Long id);
+    Optional<Room> findRoomWithHotel(Long id);
     Room updateRoom(Room room);
     void deleteRoom(Long id);
 }

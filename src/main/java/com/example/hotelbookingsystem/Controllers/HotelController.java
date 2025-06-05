@@ -2,6 +2,7 @@ package com.example.hotelbookingsystem.Controllers;
 
 
 import com.example.hotelbookingsystem.Models.Hotel;
+import com.example.hotelbookingsystem.service.BookingService;
 import com.example.hotelbookingsystem.service.HotelService;
 import com.example.hotelbookingsystem.service.impl.HotelServiceImpl;
 import lombok.AllArgsConstructor;
@@ -19,13 +20,13 @@ public class HotelController {
 
     private final HotelService hotelService;
 
+
 //    public HotelController(HotelService hotelService) {
 //        this.hotelService = hotelService;
 //    }
 
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
     public List<Hotel> getHotels() {
         return hotelService.getHotelList();
     }

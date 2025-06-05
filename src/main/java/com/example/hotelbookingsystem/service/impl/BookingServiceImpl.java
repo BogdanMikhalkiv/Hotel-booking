@@ -6,6 +6,8 @@ import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.repository.BookingRepository;
 import com.example.hotelbookingsystem.repository.RoomRepository;
 import com.example.hotelbookingsystem.service.BookingService;
+import com.example.hotelbookingsystem.service.RoomService;
+import com.example.hotelbookingsystem.service.emailService.EmailService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,6 +27,10 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private  BookingRepository bookingRepository;
+    private final RoomService roomService;
+    private final EmailService emailService;
+
+
     private RoomRepository roomRepository;
 
     @Override
@@ -48,27 +53,34 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
-    public Booking saveBooking(Booking booking) {
-//        Room room = roomRepository.findAllById(booking
-//                                    .getRoom().getId())
-//                                    .orElseThrow(() -> new RuntimeException("Не найдена"));
+    public Boolean saveBooking(Booking booking) {
+
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
                                     booking.getDateTo(),
                                     booking.getRoom().getId()
-                ).isEmpty()) {
-            System.out.println("start sleep-------------------------------");
-            try {
-                Thread.sleep(10*1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("stop sleep+++++++++++++++++++++++++++++++++");
+            ).isEmpty()) {
+            bookingRepository.save(booking);
+            Room room = roomService.findRoomWithHotel(booking.getRoom().getId()).orElse(null);
+            String nameHotel = room.getHotel().getName();
+            String msg = "Hello ,\n thank you for booking a room, starts at "
+                    + booking.getDateFrom()
+                    + ", ends " + booking.getDateTo();
 
-            return bookingRepository.save(booking);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            if (!(auth instanceof AnonymousAuthenticationToken)) {
+                UserN userN = (UserN) auth.getPrincipal();
+                emailService.sendSimpleEmail(
+                        userN.getEmail(),
+                        "Confirming booking at hotel " + nameHotel,
+                        msg
+                );
+            }
+            return  true;
         }
-        return null;
+        return false;
     }
 
 
