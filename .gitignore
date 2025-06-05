@@ -3,6 +3,9 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+# Игнорировать конфигурации с секретами
+src/main/resources/application.properties
+
 
 ### STS ###
 .apt_generated
