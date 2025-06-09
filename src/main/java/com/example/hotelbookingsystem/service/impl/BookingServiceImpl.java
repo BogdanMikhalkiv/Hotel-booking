@@ -9,6 +9,7 @@ import com.example.hotelbookingsystem.service.BookingService;
 import com.example.hotelbookingsystem.service.RoomService;
 import com.example.hotelbookingsystem.service.emailService.EmailService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,11 +35,13 @@ public class BookingServiceImpl implements BookingService {
     private RoomRepository roomRepository;
 
     @Override
+    @Cacheable(value = "booking")
     public List<Booking> getBookingList() {
         return bookingRepository.findAll();
     }
 
     @Override
+    @Cacheable(value = "booking")
     public List<Booking> getBookingListMy() {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -86,16 +89,19 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
+    @Cacheable(value = "booking",key = "#id")
     public Booking findByIdBooking(Long id) {
         return bookingRepository.findAllById(id);
     }
 
     @Override
+    @Cacheable(value = "booking",key = "#booking.id")
     public Booking updateBooking(Booking booking) {
         return bookingRepository.save(booking);
     }
 
     @Override
+    @Cacheable(value = "booking",key = "#id")
     public String deleteBooking(Long id) {
         Booking bookingToDelete = bookingRepository.findAllById(id);
         if (!LocalDate.now().isBefore( bookingToDelete.getDateFrom())) {

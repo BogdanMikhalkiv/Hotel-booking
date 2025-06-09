@@ -44,13 +44,13 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    @CachePut(value = "room", key = "#result.id")
+    @CachePut(value = "room", key = "#room.id")
     public Room updateRoom(Room room) {
         return roomRepository.save(room);
     }
 
     @Override
-    @CacheEvict(value = "room", key = "#room.id")
+    @CacheEvict(value = "room", key = "#id")
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
     }
