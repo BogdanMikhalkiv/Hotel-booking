@@ -21,13 +21,6 @@ public class UserNController {
         return userNService.getUserList();
     }
 
-//    @PostMapping("add_guest")
-//    public String saveGuest(@RequestBody UserN userN) {
-//        userNService.saveUser(userN);
-//        return "guest was added";
-//    }
-
-
 
     @PutMapping("update_user")
     public String updateUser(@RequestBody UserN userN) {
