@@ -23,7 +23,6 @@ public class Hotel implements Serializable {
     private String street;
     private Double rating;
 
-
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private Set<Room> rooms;
 }

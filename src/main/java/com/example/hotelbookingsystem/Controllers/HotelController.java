@@ -17,14 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class HotelController {
 
-
     private final HotelService hotelService;
-
-
-//    public HotelController(HotelService hotelService) {
-//        this.hotelService = hotelService;
-//    }
-
 
     @GetMapping
     public List<Hotel> getHotels() {
@@ -37,8 +30,6 @@ public class HotelController {
         hotelService.saveHotel(hotel);
         return "Hotel was added";
     }
-
-
 
     @PutMapping("update_hotel")
     public String updateHotel(@RequestBody Hotel hotel) {

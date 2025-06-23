@@ -14,18 +14,10 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
-
-
     private final PasswordEncoder passwordEncoder;
-
-
-
-
 
     public String register(UserN user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-
         userRepository.save(user);
         return "user was registered" + user;
     }

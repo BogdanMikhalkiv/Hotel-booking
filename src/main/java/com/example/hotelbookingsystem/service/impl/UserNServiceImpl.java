@@ -31,7 +31,6 @@ public class UserNServiceImpl implements UserNService {
         return null;
     }
 
-
     @Override
     @Cacheable(value = "userN",key = "#id")
     public UserN findByIdUser(Long id) {
@@ -43,8 +42,6 @@ public class UserNServiceImpl implements UserNService {
     public UserN updateUser(UserN userN) {
         return userRepository.save(userN);
     }
-
-
 
     @Override
     @CacheEvict(value = "userN",key = "#id")

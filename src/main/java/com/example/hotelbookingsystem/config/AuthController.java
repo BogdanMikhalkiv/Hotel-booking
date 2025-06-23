@@ -18,10 +18,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class AuthController {
 
-
     private AuthService service;
-
-
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserN user) {
@@ -30,30 +27,12 @@ public class AuthController {
     @GetMapping("/whoami")
     public ResponseEntity<String> whoAmI(@RequestHeader Map<String, String> headers,
                                          @RequestBody AuthRequest authRequest) {
-
         System.out.println(headers);
-//        if (userDetails == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Вы не авторизованы");
-//        }
-
         var user = UserN.builder()
                     .email(authRequest.getEmail())
                     .password(authRequest.getPassword())
                     .build();
-
         return ResponseEntity.ok("Ваш email: " + user.getEmail());
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

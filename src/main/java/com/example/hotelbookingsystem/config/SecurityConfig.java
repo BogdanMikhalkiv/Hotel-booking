@@ -1,6 +1,5 @@
 package com.example.hotelbookingsystem.config;
 
-import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,14 +12,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,34 +24,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserRepository repository;
-
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        System.out.println("зашел userDetailsService бин");
-//        return new MyUserDetailsService();
-//    }
-//    @Bean
-//    public UserDetailsService userDetailsService(MyUserDetailsService myUserDetailsService) {
-//        return myUserDetailsService;
-//    }
-
-
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return new MyUserDetailsService();
-//    }
+    private final UserRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-
         System.out.println("зашел в UserDetailsService------------------" );
-        return username ->  repository.findByEmail(username)
+        return username ->  userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
-
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -73,7 +49,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws  Exception {
-
         return  http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
@@ -85,6 +60,5 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())  // Указываем, какой провайдер использовать
                 .formLogin(AbstractAuthenticationFilterConfigurer::disable)
                 .build();
-
     }
 }

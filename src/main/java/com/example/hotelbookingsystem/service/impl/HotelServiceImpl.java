@@ -21,8 +21,6 @@ public class HotelServiceImpl  implements HotelService {
 
     private final HotelRepository hotelRepository;
 
-
-
     @Override
     @Cacheable(value = "hotel")
     public List<Hotel> getHotelList() {

@@ -13,6 +13,7 @@ import com.example.hotelbookingsystem.service.emailService.EmailService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,15 +34,22 @@ public class BookingController {
     private final EmailService emailService;
     private final HotelService hotelService;
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public List<Booking> getBookings() {
-        return bookingService.getBookingList();
+    public ResponseEntity<?> getBookings() {
+        List<BookingDTO> bookingListMy   = bookingService.getBookingList().stream().map(booking -> new BookingDTO(
+                booking.getId(),
+                booking.getDateFrom(),
+                booking.getDateTo(),
+                booking.getRoom().getId(),
+                booking.getUserN().getId()
+        )).toList();
+        return ResponseEntity.ok(bookingListMy);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("my")
     public ResponseEntity<?> getBookingsMy() {
-
         System.out.println("getBookingsMy");
         List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO(
                 booking.getId(),
@@ -55,6 +63,7 @@ public class BookingController {
         }
         return ResponseEntity.ok(bookingListMy);
     }
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("my/from={dateFrom}&to={dateTo}")
     public ResponseEntity<?> getBookingsMyRangeDate(@PathVariable LocalDate dateFrom, @PathVariable LocalDate dateTo) {
         System.out.println("getBookingsMyRangeDate");
@@ -65,19 +74,20 @@ public class BookingController {
                                                     &&  b.getDateTo().isBefore(dateTo.plusDays(1))
                                             )
                                             .map(booking -> new BookingDTO(
-                        booking.getId(),
-                        booking.getDateFrom(),
-                        booking.getDateTo(),
-                        booking.getRoom().getId(),
-                        booking.getUserN().getId()
-        )).toList();
+                                                                            booking.getId(),
+                                                                            booking.getDateFrom(),
+                                                                            booking.getDateTo(),
+                                                                            booking.getRoom().getId(),
+                                                                            booking.getUserN().getId()
+                                                                )
+                                            ).toList();
         System.out.println(bookingListMy);
         if (bookingListMy.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
         }
         return ResponseEntity.ok(bookingListMy);
     }
-
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PatchMapping("edit_booking/{id}")
     public ResponseEntity<?> editBooking(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         Booking booking = bookingService.findByIdBooking(id);
@@ -100,15 +110,13 @@ public class BookingController {
         return ResponseEntity.ok(booking);
     }
 
-
-        @PostMapping("add_booking")
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("add_booking")
     public ResponseEntity<String> saveBooking(@RequestBody Booking booking) {
         Boolean saveBooking   = bookingService.saveBooking(booking);
-
         if (saveBooking == false) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dates are busy");
         }
-
         return ResponseEntity.ok("Booking was added");
     }
 
@@ -123,21 +131,17 @@ public class BookingController {
                     "Thank you"
             );
         }
-
-
         Room room = roomService.findRoomWithHotel(booking.getRoom().getId()).orElse(null);
         System.out.println("hotel name ---------------" + room.getHotel().getName());
 
     }
-
-
 
     @PutMapping("update_booking")
     public String updateBooking(@RequestBody Booking booking) {
         bookingService.updateBooking(booking);
         return "Booking was updated";
     }
-
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("delete_booking/{id}")
     public String deleteBooking(@PathVariable Long id) {
         return bookingService.deleteBooking(id);

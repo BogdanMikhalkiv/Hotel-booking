@@ -31,9 +31,6 @@ public class BookingServiceImpl implements BookingService {
     private final RoomService roomService;
     private final EmailService emailService;
 
-
-    private RoomRepository roomRepository;
-
     @Override
     @Cacheable(value = "booking")
     public List<Booking> getBookingList() {
@@ -43,7 +40,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Cacheable(value = "booking")
     public List<Booking> getBookingListMy() {
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             // userDetails = auth.getPrincipal()
@@ -57,7 +53,6 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
     public Boolean saveBooking(Booking booking) {
-
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
@@ -85,8 +80,6 @@ public class BookingServiceImpl implements BookingService {
         }
         return false;
     }
-
-
 
     @Override
     @Cacheable(value = "booking",key = "#id")

@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem;
 
+import lombok.SneakyThrows;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
@@ -144,7 +145,11 @@ public class mainL {
 
     }
 
-    public static void main(String[] args) {
+    private static void hereWillBeTrouble() throws CloneNotSupportedException {
+        System.out.println("Я не буду ничего кидать, не просите");
+    }
+
+    public static void main(String[] args)  {
 //        String s ="anagram";
 //        String t = "nagaram";
 //        System.out.println(isAnagram(s,t));
@@ -154,15 +159,11 @@ public class mainL {
         System.out.println(canJump(nums));
 
 
-        String s  = "2025-05-20";
-        LocalDate dateFrom = LocalDate.parse(s);
-        LocalDate dateTo = LocalDate.of(2025,5,26);
-        LocalDate localDateFrom = LocalDate.of(2025,5,22);
-        LocalDate localDateTo = LocalDate.of(2025,5,26);
-
-
-        System.out.println(localDateFrom.isAfter(dateFrom.minusDays(1)) && localDateTo.isBefore(dateTo.plusDays(1)));
-
+        try {
+            hereWillBeTrouble();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
 
 
     }

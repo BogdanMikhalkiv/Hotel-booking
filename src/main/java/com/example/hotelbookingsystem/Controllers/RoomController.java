@@ -15,12 +15,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class RoomController {
 
-
-
     private RoomService roomService;
-
-
-
 
     @GetMapping
     public List<RoomDTO> getRooms() {
@@ -34,9 +29,6 @@ public class RoomController {
                 ))
                 .toList();
     }
-
-
-
 
     @GetMapping("/{id}")
     public Optional<RoomDTO> getRoomsById(@PathVariable Long id) {
@@ -56,8 +48,6 @@ public class RoomController {
         roomService.saveRoom(room);
         return "room was added";
     }
-
-
 
     @PutMapping("update_room")
     public String updateRoom(@RequestBody Room room) {
