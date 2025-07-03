@@ -14,12 +14,7 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking,Long> {
 
-
-
-
     Booking findAllById(Long id);
-
-
 
     @Query(
             " select b" +
@@ -30,7 +25,6 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
             " where b.userN = :userN"
     )
     List<Booking> findBookingByUserN(@Param("userN")UserN userN);
-
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(

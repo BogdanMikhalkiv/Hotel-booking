@@ -1,16 +1,24 @@
 package com.example.hotelbookingsystem.service;
 
 import com.example.hotelbookingsystem.Models.Booking;
+import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public interface BookingService {
 
-    List<Booking> getBookingList();
-    List<Booking> getBookingListMy();
+    List<BookingDTO> getBookingList();
+    List<BookingDTO> getBookingListMy();
     Boolean saveBooking(Booking booking);
+    Boolean saveBookingEmailConfirmation(Booking booking);
     Booking findByIdBooking (Long id);
     Booking updateBooking(Booking booking);
+
+    Booking updateRoomPartial(Booking booking,  Map<String, Object> updates);
+
+    List<BookingDTO> getMyBookingDateRange(LocalDate dateFrom, LocalDate dateTo);
     String deleteBooking(Long id);
 
 }

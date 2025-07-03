@@ -43,8 +43,6 @@ public class RoomController {
 
     @PostMapping("add_room")
     public String saveRoom(@RequestBody Room room) {
-        System.out.println("зашел в addRoom =============");
-        System.out.println(room + "==================");
         roomService.saveRoom(room);
         return "room was added";
     }
@@ -57,7 +55,6 @@ public class RoomController {
 
     @DeleteMapping("delete_room/{id}")
     public String deleteRoom(@PathVariable Long id) {
-        System.out.println(id + "-------------------------");
         roomService.deleteRoom(id);
         return "room was deleted by id - " + id;
     }

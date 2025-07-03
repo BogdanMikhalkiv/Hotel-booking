@@ -32,32 +32,18 @@ public class BookingController {
     private  final UserNService userNService;
     private final RoomService roomService;
     private final EmailService emailService;
-    private final HotelService hotelService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<?> getBookings() {
-        List<BookingDTO> bookingListMy   = bookingService.getBookingList().stream().map(booking -> new BookingDTO(
-                booking.getId(),
-                booking.getDateFrom(),
-                booking.getDateTo(),
-                booking.getRoom().getId(),
-                booking.getUserN().getId()
-        )).toList();
-        return ResponseEntity.ok(bookingListMy);
+        List<BookingDTO> bookingDTOList   = bookingService.getBookingList();
+        return ResponseEntity.ok(bookingDTOList);
     }
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("my")
     public ResponseEntity<?> getBookingsMy() {
-        System.out.println("getBookingsMy");
-        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy().stream().map(booking -> new BookingDTO(
-                booking.getId(),
-                booking.getDateFrom(),
-                booking.getDateTo(),
-                booking.getRoom().getId(),
-                booking.getUserN().getId()
-        )).toList();
+        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy();
         if (bookingListMy.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
         }
@@ -66,22 +52,7 @@ public class BookingController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("my/from={dateFrom}&to={dateTo}")
     public ResponseEntity<?> getBookingsMyRangeDate(@PathVariable LocalDate dateFrom, @PathVariable LocalDate dateTo) {
-        System.out.println("getBookingsMyRangeDate");
-        System.out.println(dateFrom + "-------- " + dateTo);
-        List<BookingDTO> bookingListMy   = bookingService.getBookingListMy()
-                                            .stream()
-                                            .filter(b -> b.getDateFrom().isAfter(dateFrom.minusDays(1))
-                                                    &&  b.getDateTo().isBefore(dateTo.plusDays(1))
-                                            )
-                                            .map(booking -> new BookingDTO(
-                                                                            booking.getId(),
-                                                                            booking.getDateFrom(),
-                                                                            booking.getDateTo(),
-                                                                            booking.getRoom().getId(),
-                                                                            booking.getUserN().getId()
-                                                                )
-                                            ).toList();
-        System.out.println(bookingListMy);
+        List<BookingDTO> bookingListMy   = bookingService.getMyBookingDateRange(dateFrom,dateTo);
         if (bookingListMy.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
         }
@@ -94,18 +65,7 @@ public class BookingController {
         if (booking == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("not found");
         }else {
-            if (updates.containsKey("dateFrom")) {
-                booking.setDateFrom(LocalDate.parse(String.valueOf(updates.get("dateFrom"))));
-            }
-            if (updates.containsKey("dateTo")) {
-                booking.setDateTo(LocalDate.parse(String.valueOf(updates.get("dateTo"))));
-            }
-            if (updates.containsKey("userNId")) {
-                booking.setUserN(userNService.findByIdUser(Long.valueOf( updates.get("userNId").toString())));
-            }
-            if (updates.containsKey("roomId")) {
-                booking.setRoom(roomService.findByIdRoom((Long) updates.get("roomId")).orElse(null));
-            }
+            bookingService.updateRoomPartial(booking,updates);
         }
         return ResponseEntity.ok(booking);
     }
@@ -113,7 +73,7 @@ public class BookingController {
     @PreAuthorize("hasRole('USER')")
     @PostMapping("add_booking")
     public ResponseEntity<String> saveBooking(@RequestBody Booking booking) {
-        Boolean saveBooking   = bookingService.saveBooking(booking);
+        Boolean saveBooking   = bookingService.saveBookingEmailConfirmation(booking);
         if (saveBooking == false) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dates are busy");
         }

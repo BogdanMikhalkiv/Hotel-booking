@@ -1,14 +1,18 @@
 package com.example.hotelbookingsystem.service.impl;
 
 import com.example.hotelbookingsystem.Models.Booking;
+import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
 import com.example.hotelbookingsystem.Models.Room;
 import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.repository.BookingRepository;
 import com.example.hotelbookingsystem.repository.RoomRepository;
 import com.example.hotelbookingsystem.service.BookingService;
 import com.example.hotelbookingsystem.service.RoomService;
+import com.example.hotelbookingsystem.service.UserNService;
 import com.example.hotelbookingsystem.service.emailService.EmailService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -19,7 +23,9 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -30,29 +36,57 @@ public class BookingServiceImpl implements BookingService {
     private  BookingRepository bookingRepository;
     private final RoomService roomService;
     private final EmailService emailService;
+    private final UserNService userNService;
 
     @Override
     @Cacheable(value = "booking")
-    public List<Booking> getBookingList() {
-        return bookingRepository.findAll();
+    public List<BookingDTO> getBookingList() {
+        return bookingRepository.findAll()
+                                .stream()
+                                .map(booking -> new BookingDTO(
+                                        booking.getId(),
+                                        booking.getDateFrom(),
+                                        booking.getDateTo(),
+                                        booking.getRoom().getId(),
+                                        booking.getUserN().getId()
+                                 )).toList();
     }
 
     @Override
     @Cacheable(value = "booking")
-    public List<Booking> getBookingListMy() {
+    public List<BookingDTO> getBookingListMy() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
-            // userDetails = auth.getPrincipal()
             UserN userN = (UserN) auth.getPrincipal();
-            return  bookingRepository.findBookingByUserN(userN);
+
+            return  bookingRepository.findBookingByUserN(userN)
+                                                                .stream()
+                                                                .map(booking -> new BookingDTO(
+                                                                        booking.getId(),
+                                                                        booking.getDateFrom(),
+                                                                        booking.getDateTo(),
+                                                                        booking.getRoom().getId(),
+                                                                        booking.getUserN().getId()
+                                                                )).toList();
         }
-        return null;
+        return Collections.emptyList();
+    }
+
+    @Override
+    @Cacheable(value = "booking")
+    public List<BookingDTO> getMyBookingDateRange(LocalDate dateFrom, LocalDate dateTo) {
+        List<BookingDTO> bookingListMy   = getBookingListMy()
+                                                            .stream()
+                                                            .filter(b -> b.getDateFrom().isAfter(dateFrom.minusDays(1))
+                                                                    &&   b.getDateTo().isBefore(dateTo.plusDays(1))
+                                                            ).toList();
+        return bookingListMy;
     }
 
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
-    public Boolean saveBooking(Booking booking) {
+    public Boolean saveBookingEmailConfirmation(Booking booking) {
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
@@ -60,6 +94,7 @@ public class BookingServiceImpl implements BookingService {
                                     booking.getRoom().getId()
             ).isEmpty()) {
             bookingRepository.save(booking);
+
             Room room = roomService.findRoomWithHotel(booking.getRoom().getId()).orElse(null);
             String nameHotel = room.getHotel().getName();
             String msg = "Hello ,\n thank you for booking a room, starts at "
@@ -81,6 +116,23 @@ public class BookingServiceImpl implements BookingService {
         return false;
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Override
+    public Boolean saveBooking(Booking booking) {
+        if (
+                bookingRepository.findRoomsByID(
+                        booking.getDateFrom(),
+                        booking.getDateTo(),
+                        booking.getRoom().getId()
+                ).isEmpty()) {
+            bookingRepository.save(booking);
+            return  true;
+        }
+        return false;
+    }
+
+
+
     @Override
     @Cacheable(value = "booking",key = "#id")
     public Booking findByIdBooking(Long id) {
@@ -88,13 +140,32 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Cacheable(value = "booking",key = "#booking.id")
+    @CachePut(value = "booking",key = "#booking.id")
     public Booking updateBooking(Booking booking) {
         return bookingRepository.save(booking);
     }
 
     @Override
-    @Cacheable(value = "booking",key = "#id")
+    @CachePut(value = "room", key = "#result.id")
+    public Booking updateRoomPartial(Booking booking,  Map<String, Object> updates) {
+        if (updates.containsKey("dateFrom")) {
+            booking.setDateFrom(LocalDate.parse(String.valueOf(updates.get("dateFrom"))));
+        }
+        if (updates.containsKey("dateTo")) {
+            booking.setDateTo(LocalDate.parse(String.valueOf(updates.get("dateTo"))));
+        }
+        if (updates.containsKey("userNId")) {
+            booking.setUserN(userNService.findByIdUser(Long.valueOf( updates.get("userNId").toString())));
+        }
+        if (updates.containsKey("roomId")) {
+            booking.setRoom(roomService.findByIdRoom((Long) updates.get("roomId")).orElse(null));
+        }
+        saveBooking(booking);
+        return null;
+    }
+
+    @Override
+    @CacheEvict(value = "booking",key = "#id")
     public String deleteBooking(Long id) {
         Booking bookingToDelete = bookingRepository.findAllById(id);
         if (!LocalDate.now().isBefore( bookingToDelete.getDateFrom())) {
