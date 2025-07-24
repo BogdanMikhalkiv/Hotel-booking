@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem.config;
 
+import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +30,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         System.out.println("зашел в UserDetailsService------------------" );
+
         return username ->  userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }

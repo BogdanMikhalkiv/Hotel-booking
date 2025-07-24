@@ -86,10 +86,11 @@ public class BookingController {
     }
 
     @GetMapping("hello")
-    public void helloW(@RequestBody Booking booking) {
+    public void helloW() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserN userN = (UserN) auth.getPrincipal();
+            System.out.println(userN);
 //            emailService.sendSimpleEmail(
 //                    userN.getEmail(),
 //                    "Confirming booking at hotel Lox ",

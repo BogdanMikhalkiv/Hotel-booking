@@ -38,7 +38,6 @@ public class BookingServiceImpl implements BookingService {
     private final EmailService emailService;
     private final UserNService userNService;
 
-    private final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 
 //    @Override
@@ -66,6 +65,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Cacheable(value = "bookingMy")
     public List<BookingDTO> getBookingListMy() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserN userN = (UserN) auth.getPrincipal();
 
@@ -97,6 +97,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
     public Boolean saveBookingEmailConfirmation(Booking booking) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
@@ -150,7 +151,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @CachePut(value = "booking",key = "#booking.id")
     public Booking updateBooking(Booking booking) {
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserN userN = (UserN) auth.getPrincipal();
