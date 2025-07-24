@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -24,6 +25,7 @@ public class Room  implements Serializable {
     private Hotel hotel;
 
     @OneToMany(mappedBy = "room",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Booking> bookings;
 
 }

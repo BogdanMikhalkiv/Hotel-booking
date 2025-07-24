@@ -38,24 +38,34 @@ public class BookingServiceImpl implements BookingService {
     private final EmailService emailService;
     private final UserNService userNService;
 
+    private final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+
+//    @Override
+//    @Cacheable(value = "booking")
+//    public List<Booking> getBookingList() {
+//        return bookingRepository.findAll();
+//
+//    }
+    @Transactional(readOnly = true)
     @Override
     @Cacheable(value = "booking")
     public List<BookingDTO> getBookingList() {
-        return bookingRepository.findAll()
-                                .stream()
-                                .map(booking -> new BookingDTO(
-                                        booking.getId(),
-                                        booking.getDateFrom(),
-                                        booking.getDateTo(),
-                                        booking.getRoom().getId(),
-                                        booking.getUserN().getId()
-                                 )).toList();
+        List<BookingDTO> bookingDTOList = bookingRepository.findAllBooking()
+                .stream()
+                .map(booking -> new BookingDTO(
+                        booking.getId(),
+                        booking.getDateFrom(),
+                        booking.getDateTo(),
+                        booking.getRoom().getId(),
+                        booking.getUserN().getId()
+                )).toList();
+        return bookingDTOList;
     }
 
     @Override
-    @Cacheable(value = "booking")
+    @Cacheable(value = "bookingMy")
     public List<BookingDTO> getBookingListMy() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserN userN = (UserN) auth.getPrincipal();
 
@@ -101,8 +111,6 @@ public class BookingServiceImpl implements BookingService {
                     + booking.getDateFrom()
                     + ", ends " + booking.getDateTo();
 
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
             if (!(auth instanceof AnonymousAuthenticationToken)) {
                 UserN userN = (UserN) auth.getPrincipal();
                 emailService.sendSimpleEmail(
@@ -142,26 +150,43 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @CachePut(value = "booking",key = "#booking.id")
     public Booking updateBooking(Booking booking) {
+
+
+        if (!(auth instanceof AnonymousAuthenticationToken)) {
+            UserN userN = (UserN) auth.getPrincipal();
+            if (userN.getRole().equals("ROLE_USER")) {
+                if (!bookingRepository.findBookingByUserNAndId(userN,booking.getId()).isEmpty()) {
+                    bookingRepository.save(booking);
+                }
+            }
+        }
+
         return bookingRepository.save(booking);
     }
 
     @Override
-    @CachePut(value = "room", key = "#result.id")
-    public Booking updateRoomPartial(Booking booking,  Map<String, Object> updates) {
-        if (updates.containsKey("dateFrom")) {
-            booking.setDateFrom(LocalDate.parse(String.valueOf(updates.get("dateFrom"))));
+    @CachePut(value = "booking", key = "#result.id")
+    public Booking updateBookingPartial(Long id,  Map<String, Object> updates) {
+        Booking booking = bookingRepository.findAllById(id);
+        if (booking == null) {
+             return null;
+        } else {
+
+            if (updates.containsKey("dateFrom")) {
+                booking.setDateFrom(LocalDate.parse(String.valueOf(updates.get("dateFrom"))));
+            }
+            if (updates.containsKey("dateTo")) {
+                booking.setDateTo(LocalDate.parse(String.valueOf(updates.get("dateTo"))));
+            }
+            if (updates.containsKey("userNId")) {
+                booking.setUserN(userNService.findByIdUser(Long.valueOf(updates.get("userNId").toString())));
+            }
+            if (updates.containsKey("roomId")) {
+                booking.setRoom(roomService.findByIdRoom((Long) updates.get("roomId")).orElse(null));
+            }
+            saveBooking(booking);
+            return booking;
         }
-        if (updates.containsKey("dateTo")) {
-            booking.setDateTo(LocalDate.parse(String.valueOf(updates.get("dateTo"))));
-        }
-        if (updates.containsKey("userNId")) {
-            booking.setUserN(userNService.findByIdUser(Long.valueOf( updates.get("userNId").toString())));
-        }
-        if (updates.containsKey("roomId")) {
-            booking.setRoom(roomService.findByIdRoom((Long) updates.get("roomId")).orElse(null));
-        }
-        saveBooking(booking);
-        return null;
     }
 
     @Override

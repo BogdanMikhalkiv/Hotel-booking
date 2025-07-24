@@ -16,7 +16,7 @@ public interface BookingService {
     Booking findByIdBooking (Long id);
     Booking updateBooking(Booking booking);
 
-    Booking updateRoomPartial(Booking booking,  Map<String, Object> updates);
+    Booking updateBookingPartial(Long id,  Map<String, Object> updates);
 
     List<BookingDTO> getMyBookingDateRange(LocalDate dateFrom, LocalDate dateTo);
     String deleteBooking(Long id);

@@ -16,16 +16,35 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
 
     Booking findAllById(Long id);
 
+
+    @Query(
+            " select b " +
+            " from Booking b" +
+            " join fetch b.room r" +
+            " join fetch r.hotel  h " +
+            " join fetch b.userN u"
+    )
+    List<Booking> findAllBooking();
+
     @Query(
             " select b" +
             " from Booking b" +
             " join fetch b.room r" +
             " join fetch r.hotel h" +
-            " join fetch b.userN u" +
+           // " join fetch b.userN u" +
             " where b.userN = :userN"
     )
     List<Booking> findBookingByUserN(@Param("userN")UserN userN);
 
+    @Query(
+            " select b" +
+            " from Booking b" +
+            " join fetch b.room r" +
+           // " join fetch r.hotel h" +
+            " join fetch b.userN u" +
+            " where b.userN = :userN and b.id = :bookingId"
+    )
+    List<Booking> findBookingByUserNAndId(@Param("userN")UserN userN, @Param("bookingId") Long bookingId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
             " select b" +

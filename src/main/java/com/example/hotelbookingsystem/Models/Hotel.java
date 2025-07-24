@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class Hotel implements Serializable {
     private Double rating;
 
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Room> rooms;
 }
 

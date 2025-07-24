@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,7 @@ public class UserN implements UserDetails , Serializable {
     private String role;
 
     @OneToMany(mappedBy = "userN",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Booking> bookings;
 
     @Override
