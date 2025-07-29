@@ -39,6 +39,10 @@ public class UserN implements UserDetails , Serializable {
     @JsonIgnore
     private Set<Booking> bookings;
 
+    @OneToMany(mappedBy = "userN",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<AuditLog> auditLogs;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));

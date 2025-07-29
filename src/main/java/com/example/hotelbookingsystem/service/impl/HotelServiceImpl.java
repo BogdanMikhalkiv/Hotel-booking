@@ -1,5 +1,7 @@
 package com.example.hotelbookingsystem.service.impl;
 
+import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
+import com.example.hotelbookingsystem.Models.DTO.HotelDTO;
 import com.example.hotelbookingsystem.Models.Hotel;
 import com.example.hotelbookingsystem.repository.HotelRepository;
 import com.example.hotelbookingsystem.service.HotelService;
@@ -23,8 +25,23 @@ public class HotelServiceImpl  implements HotelService {
 
     @Override
     @Cacheable(value = "hotel")
-    public List<Hotel> getHotelList() {
-        return hotelRepository.findAll();
+    public List<HotelDTO> getHotelList() {
+        List<HotelDTO> hotelDTOS = hotelRepository.findAll()
+                .stream()
+                .map(hotel -> new HotelDTO(
+                        hotel.getId(),
+                        hotel.getName(),
+                        hotel.getTelefon(),
+                        hotel.getStreet(),
+                        hotel.getRating()
+                )).toList();
+        return hotelDTOS;
+    }
+
+    @Override
+    public Hotel getHotelById(Long id ) {
+        Hotel  hotel = hotelRepository.findAllById(id);
+        return hotel;
     }
 
     @Override
