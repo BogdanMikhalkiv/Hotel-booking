@@ -24,22 +24,24 @@ public class HotelServiceImpl  implements HotelService {
     private final HotelRepository hotelRepository;
 
     @Override
-    @Cacheable(value = "hotel")
+    //@Cacheable(value = "hotel")
     public List<HotelDTO> getHotelList() {
-        List<HotelDTO> hotelDTOS = hotelRepository.findAll()
-                .stream()
-                .map(hotel -> new HotelDTO(
-                        hotel.getId(),
-                        hotel.getName(),
-                        hotel.getTelefon(),
-                        hotel.getStreet(),
-                        hotel.getRating()
-                )).toList();
+        System.out.println("getHotelList");
+        List<HotelDTO> hotelDTOS = hotelRepository.findAllHotels();
+//                .stream()
+//                .map(hotel -> new HotelDTO(
+//                        hotel.getId(),
+//                        hotel.getName(),
+//                        hotel.getTelefon(),
+//                        hotel.getStreet(),
+//                        hotel.getRating()
+//                )).toList();
         return hotelDTOS;
     }
 
     @Override
     public Hotel getHotelById(Long id ) {
+        System.out.println("getHotelById");
         Hotel  hotel = hotelRepository.findAllById(id);
         return hotel;
     }

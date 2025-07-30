@@ -32,7 +32,7 @@ public class HotelController {
     AuditLogService auditLogService;
 
     @GetMapping
-    public ResponseEntity<List<HotelDTO>> getHotels() {
+    public ResponseEntity<?> getHotels() {
         return ResponseEntity.ok(hotelService.getHotelList());
     }
 
