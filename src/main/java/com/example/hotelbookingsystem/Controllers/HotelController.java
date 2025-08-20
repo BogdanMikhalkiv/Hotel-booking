@@ -14,6 +14,8 @@ import com.example.hotelbookingsystem.service.impl.HotelServiceImpl;
 import io.lettuce.core.dynamic.annotation.Param;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -39,27 +41,24 @@ public class HotelController {
     @GetMapping("{id}")
     public ResponseEntity<?> getHotelById(@PathVariable() Long id) {
 
-        return ResponseEntity.ok(hotelService.getHotelById( id));
+        if (hotelService.findByIdHotel( id) == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("not found");
+        }
+
+        return ResponseEntity.ok(hotelService.findByIdHotel(id));
+    }
+
+    @GetMapping("/clear")
+    @CacheEvict(value = "hotel", allEntries = true)
+    public void clearHotelCache() {
+        System.out.println("Кэш очищен");
     }
 
     @PostMapping("add_hotel")
     public String saveHotel(@RequestBody Hotel hotel) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println(hotel);
         hotelService.saveHotel(hotel);
 
-        auditLogService.logAction(
-                AuditLog
-                        .builder()
-                        .timestamp(LocalDateTime.now())
-                        .userN((UserN) auth.getPrincipal())
-                        .entityId(hotel.getId())
-                        .entityType(Hotel.class.getName())
-                        .action("add Hotel")
-                        .build()
-
-
-        );
         return "Hotel was added";
     }
 

@@ -23,7 +23,6 @@ public class AuditLog implements Serializable {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    private String action;
     private String entityType;
     private Long entityId;
 
@@ -31,4 +30,7 @@ public class AuditLog implements Serializable {
     @JoinColumn(name = "userN_id", nullable = false)
     private UserN userN;
 
+    @ManyToOne
+    @JoinColumn(name = "actionType_id", nullable = false)
+    private ActionType actionType;
 }

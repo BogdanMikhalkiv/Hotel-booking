@@ -9,6 +9,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class mainL {
+
+    public static void add(int i) {
+        i= i+1;
+    }
     public static List<String> summaryRanges(int[] nums) {
 
 
@@ -154,18 +158,20 @@ public class mainL {
 //        String t = "nagaram";
 //        System.out.println(isAnagram(s,t));
 
-        SortedSet<Integer> ts = new TreeSet<>();
-        int[] nums = {2,0};
-        System.out.println(canJump(nums));
+//        SortedSet<Integer> ts = new TreeSet<>();
+//        int[] nums = {2,0};
+//        System.out.println(canJump(nums));
+//
+//
+//        try {
+//            hereWillBeTrouble();
+//        } catch (CloneNotSupportedException e) {
+//            throw new RuntimeException(e);
+//        }
 
-
-        try {
-            hereWillBeTrouble();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-
-
+        int i = 3;
+        add(i);
+        System.out.println(i);
     }
 
 }

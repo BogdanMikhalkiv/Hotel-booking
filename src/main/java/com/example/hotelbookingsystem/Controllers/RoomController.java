@@ -4,6 +4,7 @@ import com.example.hotelbookingsystem.Models.DTO.RoomDTO;
 import com.example.hotelbookingsystem.Models.Room;
 import com.example.hotelbookingsystem.service.RoomService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,12 @@ public class RoomController {
                         room.getHotel().getName()
                 ))
                 .toList();
+    }
+
+    @GetMapping("/clear")
+    @CacheEvict(value = "room", allEntries = true)
+    public void clearRoomCache() {
+        System.out.println("Кэш очищен");
     }
 
     @GetMapping("/{id}")
