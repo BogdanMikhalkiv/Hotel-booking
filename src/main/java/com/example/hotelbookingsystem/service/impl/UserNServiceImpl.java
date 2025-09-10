@@ -27,6 +27,7 @@ public class UserNServiceImpl implements UserNService {
     }
 
     @Override
+    @CacheEvict(value = "userN", allEntries = true)
     public UserN saveUser(UserN userN) {
         return null;
     }

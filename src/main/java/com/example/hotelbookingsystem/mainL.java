@@ -1,5 +1,6 @@
 package com.example.hotelbookingsystem;
 
+import com.example.hotelbookingsystem.Models.Hotel;
 import lombok.SneakyThrows;
 import org.springframework.cglib.core.Local;
 
@@ -169,9 +170,8 @@ public class mainL {
 //            throw new RuntimeException(e);
 //        }
 
-        int i = 3;
-        add(i);
-        System.out.println(i);
+
+        System.out.println(Hotel.class.getSimpleName());
     }
 
 }

@@ -1,11 +1,11 @@
 package com.example.hotelbookingsystem.service.impl;
 
-import com.example.hotelbookingsystem.Models.Booking;
+import com.example.hotelbookingsystem.Models.*;
 import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
-import com.example.hotelbookingsystem.Models.Room;
-import com.example.hotelbookingsystem.Models.UserN;
+import com.example.hotelbookingsystem.repository.ActionTypeRepository;
 import com.example.hotelbookingsystem.repository.BookingRepository;
 import com.example.hotelbookingsystem.repository.RoomRepository;
+import com.example.hotelbookingsystem.service.AuditLogService;
 import com.example.hotelbookingsystem.service.BookingService;
 import com.example.hotelbookingsystem.service.RoomService;
 import com.example.hotelbookingsystem.service.UserNService;
@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ public class BookingServiceImpl implements BookingService {
     private final RoomService roomService;
     private final EmailService emailService;
     private final UserNService userNService;
+    private final AuditLogService auditLogService;
+    private final ActionTypeRepository actionTypeRepository;
 
 
 
@@ -96,6 +99,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
+    @CacheEvict(value = "booking", allEntries = true)
     public Boolean saveBookingEmailConfirmation(Booking booking) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (
@@ -127,6 +131,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
+    @CacheEvict(value = "booking", allEntries = true)
     public Boolean saveBooking(Booking booking) {
         if (
                 bookingRepository.findRoomsByID(
@@ -164,10 +169,11 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.save(booking);
     }
-
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     @Override
     @CachePut(value = "booking", key = "#result.id")
     public Booking updateBookingPartial(Long id,  Map<String, Object> updates) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Booking booking = bookingRepository.findAllById(id);
         if (booking == null) {
              return null;
@@ -185,7 +191,28 @@ public class BookingServiceImpl implements BookingService {
             if (updates.containsKey("roomId")) {
                 booking.setRoom(roomService.findByIdRoom((Long) updates.get("roomId")).orElse(null));
             }
-            saveBooking(booking);
+
+
+            if (
+                    bookingRepository.findRoomsByIDEdit(
+                            booking.getDateFrom(),
+                            booking.getDateTo(),
+                            booking.getRoom().getId(),
+                            booking.getId()
+                    ).isEmpty()) {
+                bookingRepository.save(booking);
+            }
+
+            auditLogService.logAction(
+                    AuditLog
+                            .builder()
+                            .timestamp(LocalDateTime.now())
+                            .userN((UserN) auth.getPrincipal())
+                            .entityId(booking.getId())
+                            .entityType(Booking.class.getSimpleName())
+                            .actionType(actionTypeRepository.findByName("Update"))
+                            .build()
+            );
             return booking;
         }
     }

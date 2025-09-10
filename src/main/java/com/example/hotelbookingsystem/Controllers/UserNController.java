@@ -3,6 +3,7 @@ package com.example.hotelbookingsystem.Controllers;
 import com.example.hotelbookingsystem.Models.UserN;
 import com.example.hotelbookingsystem.service.UserNService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,12 @@ public class UserNController {
     public String updateUser(@RequestBody UserN userN) {
         userNService.updateUser(userN);
         return "guest was updated";
+    }
+
+    @GetMapping("/clear")
+    @CacheEvict(value = "userN", allEntries = true)
+    public void clearUserNCache() {
+        System.out.println("Кэш очищен");
     }
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")

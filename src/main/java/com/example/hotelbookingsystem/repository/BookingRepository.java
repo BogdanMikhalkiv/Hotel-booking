@@ -57,4 +57,17 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
     List<Booking> findRoomsByID(@Param("NEW_DATE_FROM") LocalDate NEW_DATE_FROM,
                              @Param("NEW_DATE_TO") LocalDate NEW_DATE_TO,
                             @Param("ROOM_ID") Long ROOM_ID);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+                    " select b" +
+                    " from Booking b" +
+                    " where (:NEW_DATE_FROM >= b.dateFrom AND :NEW_DATE_FROM < b.dateTo) " +
+                    " or (:NEW_DATE_TO > b.dateFrom AND :NEW_DATE_TO <= b.dateTo)" +
+                    " and b.room.id = :ROOM_ID and b.id != :BOOKING_ID"
+    )
+    List<Booking> findRoomsByIDEdit(@Param("NEW_DATE_FROM") LocalDate NEW_DATE_FROM,
+                                @Param("NEW_DATE_TO") LocalDate NEW_DATE_TO,
+                                @Param("ROOM_ID") Long ROOM_ID,
+                                @Param("BOOKING_ID") Long BOOKING_ID);
 }

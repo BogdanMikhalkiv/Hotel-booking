@@ -45,7 +45,7 @@ public class HotelServiceImpl  implements HotelService {
                         .builder()
                         .timestamp(LocalDateTime.now())
                         .userN((UserN) auth.getPrincipal())
-                        .entityType(Hotel.class.getName())
+                        .entityType(Hotel.class.getSimpleName())
                         .actionType(actionTypeRepository.findByName("Read"))
                         .build()
         );
@@ -61,6 +61,7 @@ public class HotelServiceImpl  implements HotelService {
     }
 
     @Override
+    @CacheEvict(value = "hotel", allEntries = true)
     public Hotel saveHotel(Hotel hotel) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         hotelRepository.save(hotel);
@@ -70,7 +71,7 @@ public class HotelServiceImpl  implements HotelService {
                         .timestamp(LocalDateTime.now())
                         .userN((UserN) auth.getPrincipal())
                         .entityId(hotel.getId())
-                        .entityType(Hotel.class.getName())
+                        .entityType(Hotel.class.getSimpleName())
                         .actionType(actionTypeRepository.findByName("Create"))
                         .build()
         );
@@ -93,7 +94,7 @@ public class HotelServiceImpl  implements HotelService {
                         .timestamp(LocalDateTime.now())
                         .userN((UserN) auth.getPrincipal())
                         .entityId(hotel.getId())
-                        .entityType(Hotel.class.getName())
+                        .entityType(Hotel.class.getSimpleName())
                         .actionType(actionTypeRepository.findByName("Read"))
                         .build()
         );
@@ -110,7 +111,7 @@ public class HotelServiceImpl  implements HotelService {
                         .timestamp(LocalDateTime.now())
                         .userN((UserN) auth.getPrincipal())
                         .entityId(hotel.getId())
-                        .entityType(Hotel.class.getName())
+                        .entityType(Hotel.class.getSimpleName())
                         .actionType(actionTypeRepository.findByName("Update"))
                         .build()
         );
@@ -131,7 +132,7 @@ public class HotelServiceImpl  implements HotelService {
                         .timestamp(LocalDateTime.now())
                         .userN((UserN) auth.getPrincipal())
                         .entityId(hotel.getId())
-                        .entityType(Hotel.class.getName())
+                        .entityType(Hotel.class.getSimpleName())
                         .actionType(actionTypeRepository.findByName("Delete"))
                         .build()
         );
