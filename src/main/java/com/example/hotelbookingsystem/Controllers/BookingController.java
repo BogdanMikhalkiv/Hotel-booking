@@ -1,17 +1,17 @@
 package com.example.hotelbookingsystem.Controllers;
 
 
+import com.example.hotelbookingsystem.Models.AuditLog;
 import com.example.hotelbookingsystem.Models.Booking;
 import com.example.hotelbookingsystem.Models.DTO.BookingDTO;
 import com.example.hotelbookingsystem.Models.Room;
 import com.example.hotelbookingsystem.Models.UserN;
-import com.example.hotelbookingsystem.service.BookingService;
-import com.example.hotelbookingsystem.service.HotelService;
-import com.example.hotelbookingsystem.service.RoomService;
-import com.example.hotelbookingsystem.service.UserNService;
+import com.example.hotelbookingsystem.repository.ActionTypeRepository;
+import com.example.hotelbookingsystem.service.*;
 import com.example.hotelbookingsystem.service.emailService.EmailService;
 import com.example.hotelbookingsystem.service.impl.BookingServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -33,14 +34,17 @@ public class BookingController {
     private  final UserNService userNService;
     private final RoomService roomService;
     private final EmailService emailService;
+    private final AuditLogService auditLogService;
+    private final ActionTypeRepository actionTypeRepository;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<BookingDTO>> getBookings() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("до выполнения ");
         List<BookingDTO> bookingDTOList   = bookingService.getBookingList();
         System.out.println("после выполнения");
-        //System.out.println("Class: " + bookingDTOList.get(0).getClass());
+
         return ResponseEntity.ok(bookingDTOList);
     }
 
@@ -48,9 +52,12 @@ public class BookingController {
     @GetMapping("my")
     public ResponseEntity<?> getBookingsMy() {
         List<BookingDTO> bookingListMy   = bookingService.getBookingListMy();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (bookingListMy.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You do not have any bookings!");
         }
+
         return ResponseEntity.ok(bookingListMy);
     }
     @PreAuthorize("hasRole('USER')")
@@ -62,6 +69,19 @@ public class BookingController {
         }
         return ResponseEntity.ok(bookingListMy);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("{id}")
+    public ResponseEntity<?> getBookingById(@PathVariable Long id) {
+        Booking booking = bookingService.findByIdBooking(id);
+        if (booking == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("no booking with this ID - " + id);
+        } else {
+            return ResponseEntity.ok(booking);
+        }
+    }
+
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("edit_booking/{id}")
@@ -108,6 +128,12 @@ public class BookingController {
     public String updateBooking(@RequestBody Booking booking) {
         bookingService.updateBooking(booking);
         return "Booking was updated";
+    }
+
+    @GetMapping("/clear")
+    @CacheEvict(value = "booking", allEntries = true)
+    public void clearBookingCache() {
+        System.out.println("Кэш очищен");
     }
 
 //    @PreAuthorize("hasRole('ADMIN')")

@@ -53,6 +53,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Cacheable(value = "booking")
     public List<BookingDTO> getBookingList() {
+        System.out.println("getBookingList");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         List<BookingDTO> bookingDTOList = bookingRepository.findAllBooking()
                 .stream()
                 .map(booking -> new BookingDTO(
@@ -62,6 +64,15 @@ public class BookingServiceImpl implements BookingService {
                         booking.getRoom().getId(),
                         booking.getUserN().getId()
                 )).toList();
+//        auditLogService.logAction(
+//                AuditLog
+//                        .builder()
+//                        .timestamp(LocalDateTime.now())
+//                        .userN((UserN) auth.getPrincipal())
+//                        .entityType(Booking.class.getSimpleName())
+//                        .actionType(actionTypeRepository.findByName("Read"))
+//                        .build()
+//        );
         return bookingDTOList;
     }
 
@@ -71,6 +82,16 @@ public class BookingServiceImpl implements BookingService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserN userN = (UserN) auth.getPrincipal();
+
+            auditLogService.logAction(
+                    AuditLog
+                            .builder()
+                            .timestamp(LocalDateTime.now())
+                            .userN(userN)
+                            .entityType(Booking.class.getSimpleName())
+                            .actionType(actionTypeRepository.findByName("Read"))
+                            .build()
+            );
 
             return  bookingRepository.findBookingByUserN(userN)
                                                                 .stream()
@@ -88,11 +109,22 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Cacheable(value = "booking")
     public List<BookingDTO> getMyBookingDateRange(LocalDate dateFrom, LocalDate dateTo) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         List<BookingDTO> bookingListMy   = getBookingListMy()
                                                             .stream()
                                                             .filter(b -> b.getDateFrom().isAfter(dateFrom.minusDays(1))
                                                                     &&   b.getDateTo().isBefore(dateTo.plusDays(1))
                                                             ).toList();
+        auditLogService.logAction(
+                AuditLog
+                        .builder()
+                        .timestamp(LocalDateTime.now())
+                        .userN((UserN) auth.getPrincipal())
+                        .entityType(Booking.class.getSimpleName())
+                        .actionType(actionTypeRepository.findByName("Read"))
+                        .build()
+        );
+
         return bookingListMy;
     }
 
@@ -102,6 +134,7 @@ public class BookingServiceImpl implements BookingService {
     @CacheEvict(value = "booking", allEntries = true)
     public Boolean saveBookingEmailConfirmation(Booking booking) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        //Checking if a room is available in that range of dates
         if (
                 bookingRepository.findRoomsByID(
                                     booking.getDateFrom(),
@@ -110,12 +143,14 @@ public class BookingServiceImpl implements BookingService {
             ).isEmpty()) {
             bookingRepository.save(booking);
 
+            //email information preparation
             Room room = roomService.findRoomWithHotel(booking.getRoom().getId()).orElse(null);
             String nameHotel = room.getHotel().getName();
             String msg = "Hello ,\n thank you for booking a room, starts at "
                     + booking.getDateFrom()
-                    + ", ends " + booking.getDateTo();
+                    + ", ends - " + booking.getDateTo();
 
+            //sending email
             if (!(auth instanceof AnonymousAuthenticationToken)) {
                 UserN userN = (UserN) auth.getPrincipal();
                 emailService.sendSimpleEmail(
@@ -124,6 +159,18 @@ public class BookingServiceImpl implements BookingService {
                         msg
                 );
             }
+
+            // log add
+            auditLogService.logAction(
+                    AuditLog
+                            .builder()
+                            .timestamp(LocalDateTime.now())
+                            .userN((UserN) auth.getPrincipal())
+                            .entityId(booking.getId())
+                            .entityType(Booking.class.getSimpleName())
+                            .actionType(actionTypeRepository.findByName("Create"))
+                            .build()
+            );
             return  true;
         }
         return false;
@@ -133,6 +180,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @CacheEvict(value = "booking", allEntries = true)
     public Boolean saveBooking(Booking booking) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (
                 bookingRepository.findRoomsByID(
                         booking.getDateFrom(),
@@ -140,6 +188,16 @@ public class BookingServiceImpl implements BookingService {
                         booking.getRoom().getId()
                 ).isEmpty()) {
             bookingRepository.save(booking);
+            auditLogService.logAction(
+                    AuditLog
+                            .builder()
+                            .timestamp(LocalDateTime.now())
+                            .userN((UserN) auth.getPrincipal())
+                            .entityId(booking.getId())
+                            .entityType(Booking.class.getSimpleName())
+                            .actionType(actionTypeRepository.findByName("Create"))
+                            .build()
+            );
             return  true;
         }
         return false;
@@ -150,7 +208,28 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Cacheable(value = "booking",key = "#id")
     public Booking findByIdBooking(Long id) {
-        return bookingRepository.findAllById(id);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Booking booking = bookingRepository.findAllById(id);
+
+        if (booking == null) {
+            return null;
+        } else {
+
+            auditLogService.logAction(
+                    AuditLog
+                            .builder()
+                            .timestamp(LocalDateTime.now())
+                            .userN((UserN) auth.getPrincipal())
+                            .entityId(booking.getId())
+                            .entityType(Booking.class.getSimpleName())
+                            .actionType(actionTypeRepository.findByName("Read"))
+                            .build()
+            );
+            return booking;
+
+        }
+
     }
 
     @Override
@@ -220,13 +299,33 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @CacheEvict(value = "booking",key = "#id")
     public String deleteBooking(Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Booking bookingToDelete = bookingRepository.findAllById(id);
-        if (!LocalDate.now().isBefore( bookingToDelete.getDateFrom())) {
-            return "You can't anymore cancel your booking";
+
+        if (bookingToDelete == null) {
+            return "no such booking with Id - " +  id;
         } else {
-            bookingRepository.deleteById(id);
-            return "Booking  was canceled  with id = " + id;
+
+            if (!LocalDate.now().isBefore( bookingToDelete.getDateFrom())) {
+                return "You can't anymore cancel your booking";
+            } else {
+
+
+                auditLogService.logAction(
+                        AuditLog
+                                .builder()
+                                .timestamp(LocalDateTime.now())
+                                .userN((UserN) auth.getPrincipal())
+                                .entityId(bookingToDelete.getId())
+                                .entityType(Booking.class.getSimpleName())
+                                .actionType(actionTypeRepository.findByName("Delete"))
+                                .build()
+                );
+                bookingRepository.deleteById(id);
+                return "Booking  was canceled  with id = " + id;
+            }
         }
+
 
     }
 }
